@@ -1,0 +1,26 @@
+# Ignore empty files except .gitignore
+.*
+!.gitignore
+
+# Too heavy O_o
+omnetpp/
+source/results
+results/
+
+# Ignore videos and related stuff
+*.mp4
+Video/
+
+# Ignore trashy stuff
+model/
+
+# Ignore OmNet itself (and some dummy exmaples too)
+ometpp/inet4.4
+omnet/
+
+# Ignore Sphinx's build directory
+_build/
+
+# Get rid of Python bytecode and stuff
+__pycache__
+*.pyc
