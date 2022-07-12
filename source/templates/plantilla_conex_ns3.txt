@@ -1,0 +1,7 @@
+{% for nodeID, attrs in nodes.items() -%}
+{%     if attrs['type'] == "STA" -%}
+{{ attrs['attachedAP'] }}
+{%     endif %}
+{%- endfor %}
+
+Hay que poner en el archivo un lista de el AP al que esta conectado en nodo x

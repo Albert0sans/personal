@@ -1,0 +1,10 @@
+set terminal png 
+set output 'SNR_histogram'
+set title 'SNR_histogram'
+set xlabel 'X Values' 
+set ylabel 'Y Values' 
+set xrange [0:*] 
+set boxwidth 0.5 
+set style fill solid 
+  plot '-'  title 's%' with histeps 
+e 

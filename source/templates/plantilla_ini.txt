@@ -1,0 +1,66 @@
+[Config General]
+network = SimNetwork
+sim-time-limit = {{simtime}}s 
+**.radio.packetErrorRate.result-recording-modes = +vector
+**.radio.bitErrorRate.result-recording-modes = +vector
+
+# application parameters
+
+
+*.STA[*].numApps = 1
+*.STA[*].app[*].typename = "UdpBasicApp"
+{% for nodeID, attrs in nodes.items() -%}
+{%     if attrs['type'] == "STA" -%}
+{% if (nodeID-num_ap)< num_sta -%}
+*.STA[{{ nodeID-num_ap }}].app[0].destAddresses=" AP[{{ attrs['attachedAP'] }}] "
+{# Just a comment #}
+ {%- endif %}
+{%-     endif -%}
+{%- endfor %}
+
+*.STA[*].app[*].messageLength = 1000byte
+*.STA[*].app[*].destPort = 1000
+*.STA[*].app[*].sendInterval = 1s
+*.STA[*].app[*].idleInterval = 1ms
+*.STA[*].app[*].timeInterval = 1ms
+
+
+
+
+**.crcMode = "computed"
+**.fcsMode = "computed"
+**.pcapRecorder[*].alwaysFlush = true
+*.STA[0].numPcapRecorders = 1
+#positions
+
+
+
+*.STA[*].mobility.typename = "StationaryMobility"
+*.AP[*].mobility.typename = "StationaryMobility"
+
+
+{% for nodeID, attrs in nodes.items() -%}
+{%- if nodeID >= (num_ap) -%}
+{% set nodeID=nodeID-num_ap %}
+{%- endif -%}
+{%- if nodeID < num_sta -%}
+*.{{ attrs['type'] }}[{{nodeID}}].mobility.constraintAreaMinX = {{attrs['pos'][0]}}m
+*.{{ attrs['type'] }}[{{nodeID}}].mobility.constraintAreaMaxX = {{attrs['pos'][0]}}m
+*.{{ attrs['type'] }}[{{nodeID}}].mobility.constraintAreaMinY = {{attrs['pos'][1]}}m
+*.{{ attrs['type'] }}[{{nodeID}}].mobility.constraintAreaMaxY = {{attrs['pos'][1]}}m
+*.{{ attrs['type'] }}[{{nodeID}}].mobility.constraintAreaMinZ = {{attrs['pos'][2]}}m
+*.{{ attrs['type'] }}[{{nodeID}}].mobility.constraintAreaMaxZ = {{attrs['pos'][2]}}m
+{# Just a comment #}
+{%- endif -%}
+{%- endfor -%}
+
+
+
+# wlan
+*.*.**.transmitter.power = 40mW 
+*.AP[*].**.displayCommunicationRange = true
+*.radioMedium.pathLoss.typename = ${pathlosstype="FreeSpacePathLoss"}
+*.radioMedium.backgroundNoise.power = -93.966 dBm # isotropic scalar noise power
+**.wlan*.mac.*.rateSelection.dataFrameBitrate = 54Mbps
+
+

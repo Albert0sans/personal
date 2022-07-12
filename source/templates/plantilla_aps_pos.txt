@@ -1,0 +1,7 @@
+{%- for nodeID, attrs in nodes.items() -%}
+{%-     if attrs['type'] == "AP" %}
+{{attrs['pos'][0]}},{{attrs['pos'][1]}},{{attrs['pos'][2]}}
+{%- endif -%}
+
+
+{%- endfor -%}
