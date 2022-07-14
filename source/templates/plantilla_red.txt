@@ -30,12 +30,13 @@ module AccessPoint extends ManetRouter
     	wlan[*].mgmt.typename = default("Ieee80211MgmtAp");
     	numApps=1;
     	hasUdp=true;
-    	app[*].typename = "UdpSink";
+    	app[*].typename = "UdpBasicApp2";
     	app[*].localPort = 1000;
-
+		app[*].destPort = 1000;
+		app[*].messageLength = 1000B;
+		app[*].sendInterval = 1s;
  
 }
-
 
 network SimNetwork
 {

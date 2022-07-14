@@ -24,45 +24,21 @@
 #include "inet/networklayer/common/L3AddressResolver.h"
 #include "inet/transportlayer/contract/udp/UdpControlInfo_m.h"
 
-
-
-
-#include "inet/common/ProtocolTag_m.h"
-#include "inet/physicallayer/wireless/common/base/packetlevel/NarrowbandNoiseBase.h"
-#include "inet/physicallayer/wireless/common/contract/packetlevel/IRadio.h"
-#include "inet/physicallayer/wireless/common/contract/packetlevel/IRadioMedium.h"
 #include "inet/physicallayer/wireless/common/contract/packetlevel/SignalTag_m.h"
-#include "inet/physicallayer/wireless/common/radio/packetlevel/ReceptionDecision.h"
-#include "inet/physicallayer/wireless/common/radio/packetlevel/ReceptionResult.h"
-#include "inet/physicallayer/wireless/common/signal/Interference.h"
-
-struct ValueInTime
-{
-    double time=0;//time in s
-    double value=0; // value
-
-};
-
-struct histogram
-{
-    double x=0;
-    int times=0;
+//#include "inet/common/ProtocolTag_m.h"
+//#include "inet/physicallayer/wireless/common/base/packetlevel/NarrowbandNoiseBase.h"
+//#include "inet/physicallayer/wireless/common/contract/packetlevel/IRadio.h"
+//#include "inet/physicallayer/wireless/common/contract/packetlevel/IRadioMedium.h"
+//
+//#include "inet/physicallayer/wireless/common/radio/packetlevel/ReceptionDecision.h"
+//#include "inet/physicallayer/wireless/common/radio/packetlevel/ReceptionResult.h"
+//#include "inet/physicallayer/wireless/common/signal/Interference.h"
 
 
 
-   bool operator==(const histogram& h) const
-    {
-        return (x == h.x);cout<<"recv"<<endl;
-    }
-    bool operator==(const double h) const
-    {
-        return (x == h);
-    }
-};
-vector<ValueInTime> dataset_snr;
-vector<histogram> hist_snr;
 
-void gnuplot_text(FILE * newfile,const char* title=" ",bool hist = false)
+
+void gnuplot_text(FILE * newfile,const char* title,bool hist,bool start)
 {
 char buffer[1024];
 
@@ -92,7 +68,7 @@ char buffer[1024];
 
 
 }
-void call_gnuplot(string file="file")
+void call_gnuplot(string file)
 {
     string cmd= "gnuplot ";
     cmd=cmd+file;
@@ -101,9 +77,26 @@ void call_gnuplot(string file="file")
 
 }
 int flag_once=1;
-ReceiverBase::~ ReceiverBase(){
-    /* Uso del destructor para estribir y plotear todo esto solo de debe realizar una única vez*/
+
+namespace sim {
+
+Define_Module(UdpBasicApp2);
+
+
+
+UdpBasicApp2::UdpBasicApp2(){
+FILE * snrfile,*snrhistfile;
+
+      gnuplot_text(snrfile,"SNR");
+      gnuplot_text(snrhistfile,"SNR_histogram",true);
+
+
+}
+
+UdpBasicApp2::~ UdpBasicApp2(){
+
     FILE * snrfile2,*snrhistfile2;
+    cout<<"destructor"<<flag_once<<endl;
     if(flag_once){
     snrfile2=fopen("./plot_SNR","a");
 
@@ -111,6 +104,7 @@ ReceiverBase::~ ReceiverBase(){
 
     char buffer[1024];
     for(auto i : dataset_snr){
+    //    cout<<"i"<<i.value<<endl;
         sprintf(buffer, "%lf %lf \n",i.time,i.value);
 
         fputs(buffer, snrfile2);
@@ -139,109 +133,10 @@ ReceiverBase::~ ReceiverBase(){
     }
 }
 
-const IReceptionResult *ReceiverBase::computeReceptionResult(const IListening *listening, const IReception *reception, const IInterference *interference, const ISnir *snir, const std::vector<const IReceptionDecision *> *decisions) const
-{
-    cout<<"recv"<<endl;
-    FILE * snrfile,*snrhistfile;
-    static bool first_time=true;
-    if (first_time){
-       gnuplot_text(snrfile,"SNR");
-        gnuplot_text(snrhistfile,"SNR_histogram",true);
-        first_time=false;
-    }
-    bool isReceptionSuccessful = true;
-    for (auto decision : *decisions)
-
-      //  guardar snir en archivo y usar gnpuplot para plotear
-      //  las graficas que saca esta mal
-
-        isReceptionSuccessful &= decision->isReceptionSuccessful();
-    auto packet = computeReceivedPacket(snir, isReceptionSuccessful);
-    auto signalPower = computeSignalPower(listening, snir, interference); //ver funcion
-
-///
-static int recv=0;
-
-    static double snr_meas=0;
-     static auto this_time=simTime();
-
-     static auto last_time=simTime();
-     histogram h;
-     static double t=0.100; // frequency divisor
-
-     auto i=std::find(hist_snr.begin(), (hist_snr.end()),(10*log10( snir->getMax())));
-     const bool found = (i != hist_snr.end()) ;
-     auto idx = i - hist_snr.begin();
-
-     this_time=simTime();
-
-     if (this_time>=starttime*0.85)
-     {
-
-         if(!(found))
-           {
-
-               h.x+=(10*log10(snir->getMax()));
-               h.times=1;
-
-               hist_snr.push_back(h);
-
-           }
-           else{
-               hist_snr[idx].times+=1;
-
-
-             }
-
-
-         snr_meas+=snir->getMax();
-              // cout<<"this"<<this_time<<"last"<<recv<<endl;
-                if(this_time>(last_time+t)){
-
-                    ValueInTime aux;
-                    aux.value=10*log10(snr_meas)/(this_time-last_time);
-
-                    aux.time=1/(1/this_time);
-                    dataset_snr.push_back(aux);
-
-                      snr_meas=0;
-
-                      last_time=this_time;
-
-            }
-          //
-
-
-                recv=recv+1;
-
-
-     }
-///
-    if (!std::isnan(signalPower.get())) {
-        auto signalPowerInd = packet->addTagIfAbsent<SignalPowerInd>();
-        signalPowerInd->setPower(signalPower);
-    }
-    auto snirInd = packet->addTagIfAbsent<SnirInd>();
-    snirInd->setMinimumSnir(snir->getMin());
-    snirInd->setMaximumSnir(snir->getMax());
-    snirInd->setAverageSnir(snir->getMean());
-
-    auto signalTimeInd = packet->addTagIfAbsent<SignalTimeInd>();
-    signalTimeInd->setStartTime(reception->getStartTime());
-    signalTimeInd->setEndTime(reception->getEndTime());
-    return new ReceptionResult(reception, decisions, packet);
-}
-namespace sim {
-
-Define_Module(UdpBasicApp2);
-
-
-
-
 void UdpBasicApp2::sendPacket()
 {
     std::ostringstream str;
-    str << packetName << "-foobar-" << numSent;
+    str << packetName << "-foohjhkjbar-" << numSent;
     Packet *packet = new Packet(str.str().c_str());
     if (dontFragment)
         packet->addTag<FragmentationReq>()->setDontFragment(true);
@@ -255,6 +150,71 @@ void UdpBasicApp2::sendPacket()
     socket.sendTo(packet, destAddr, destPort);
     //cout<<"numSent()"<<numSent<<" "<<simTime()<<endl;
     numSent++;
+}
+
+void UdpBasicApp2::socketDataArrived(UdpSocket *socket, Packet *packet)
+{
+
+
+
+    double snir_log = 10*log10(packet->getTag<SnirInd>()->getMaximumSnir());
+    double snir_norm = packet->getTag<SnirInd>()->getMaximumSnir();
+    static int recv=0;
+
+        static double snr_meas=0;
+         static auto this_time=simTime();
+
+         static auto last_time=simTime();
+         histogram h;
+         static double t=0; // frequency divisor
+
+         auto i=std::find(hist_snr.begin(), (hist_snr.end()),snir_log);
+         const bool found = (i != hist_snr.end()) ;
+         auto idx = i - hist_snr.begin();
+        // cout<<"recv "<<snir_log<<"   "<<this_time<<endl;
+         this_time=simTime();
+
+
+
+             if(!(found))
+               {
+
+                   h.x+=snir_log;
+                   h.times=1;
+
+                   hist_snr.push_back(h);
+
+               }
+               else{
+                   hist_snr[idx].times+=1;
+
+
+                 }
+
+
+             snr_meas+=snir_norm;
+                  // cout<<"this"<<this_time<<"last"<<recv<<endl;
+                 //   if(this_time>(last_time+t)){
+
+                        ValueInTime aux;
+                       // snr_meas=(snr_meas)/(this_time-last_time);
+                        aux.value=10*log10(snr_meas);
+
+                        aux.time=1/(1/this_time);
+                        dataset_snr.push_back(aux);
+                           snr_meas=0;
+
+
+                          last_time=this_time;
+
+               // }
+              //
+
+
+                    recv=recv+1;
+
+
+    processPacket(packet);
 }
 
 }; // namespace

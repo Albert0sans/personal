@@ -20,7 +20,7 @@ sim-time-limit = {{simtime}}s
 
 *.STA[*].app[*].messageLength = 1000byte
 *.STA[*].app[*].destPort = 1000
-*.STA[*].app[*].sendInterval = 1s
+*.STA[*].app[*].sendInterval = 100ms
 *.STA[*].app[*].idleInterval = 1ms
 *.STA[*].app[*].timeInterval = 1ms
 
@@ -57,10 +57,13 @@ sim-time-limit = {{simtime}}s
 
 
 # wlan
+**.wlan[*].mac.dcf.rtsPolicy.rtsThreshold = 0B
 *.*.**.transmitter.power = 40mW 
 *.AP[*].**.displayCommunicationRange = true
 *.radioMedium.pathLoss.typename = ${pathlosstype="FreeSpacePathLoss"}
 *.radioMedium.backgroundNoise.power = -93.966 dBm # isotropic scalar noise power
 **.wlan*.mac.*.rateSelection.dataFrameBitrate = 54Mbps
 
+**.wlan[*].radio.receiver.sensitivity =  -101dBm
+**.wlan[*].radio.receiver.snirThreshold = 10 dB
 
