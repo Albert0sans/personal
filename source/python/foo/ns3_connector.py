@@ -9,17 +9,17 @@ def ns3(G):
     
     
     """
-    archivo_aps=open("../ns3/positions_aps.txt","w")
+    archivo_aps=open("/home/h/ns3/ns-allinone-3.30/ns-3.30/scratch/positions_aps.txt","w")
     archivo_aps.write(jinja2.Template(open("../templates/plantilla_aps_pos.txt").read()).render(nodes = {k: G.nodes[k] for k in G.nodes})) 
     archivo_aps.close()
 
 
-    archivo_stas=open("../ns3/positions_stas.txt","w")
+    archivo_stas=open("/home/h/ns3/ns-allinone-3.30/ns-3.30/scratch/positions_stas.txt","w")
     archivo_stas.write(jinja2.Template(open("../templates/plantilla_stas_pos.txt").read()).render(nodes = {k: G.nodes[k] for k in G.nodes})) 
     archivo_stas.close()
 
 
-    archivo_stas=open("../ns3/conexiones_ns3.txt","w")
+    archivo_stas=open("/home/h/ns3/ns-allinone-3.30/ns-3.30/scratch/conexiones_ns3.txt","w")
 
     archivo_stas.write(jinja2.Template(open("../templates/plantilla_conex_ns3.txt").read()).render(nodes = {k: G.nodes[k] for k in G.nodes})) 
     archivo_stas.close()

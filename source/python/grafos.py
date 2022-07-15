@@ -10,8 +10,8 @@ from foo.omnet_connector  import *
 
 def main():
 
- simt=5
- n_sta=100
+ simt=60
+ n_sta=200
  n_ap=26
  G=gr.open_graph("900")
  ns.ns3(G)

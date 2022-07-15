@@ -7,11 +7,3 @@ set xrange [0:*]
 set boxwidth 0.5 
 set style fill solid 
   plot '-'  title 's%' with histeps 
-52.476301 49 
-41.306495 49 
-42.179482 49 
-45.840367 49 
-46.515391 49 
-49.588260 49 
-51.420921 49 
-e 

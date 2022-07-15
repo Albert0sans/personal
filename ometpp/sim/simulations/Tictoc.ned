@@ -4,6 +4,22 @@ package sim.simulations;
 
 import sim.UdpBasicApp2;
 
+/////////////
+
+import inet.common.MessageDispatcher;
+import inet.common.lifecycle.NodeStatus;
+import inet.linklayer.contract.IEthernetInterface;
+import inet.linklayer.contract.IMacForwardingTable;
+import inet.linklayer.contract.IMacRelayUnit;
+import inet.linklayer.contract.IWirelessInterface;
+import inet.linklayer.ethernet.contract.IEthernetLayer;
+import inet.mobility.contract.IMobility;
+import inet.networklayer.common.InterfaceTable;
+
+////////////
+
+
+
 import inet.physicallayer.wireless.common.pathloss.TwoRayGroundReflection;
 import inet.networklayer.configurator.ipv4.Ipv4NetworkConfigurator;
 import inet.node.inet.ManetRouter;
@@ -21,23 +37,67 @@ import inet.environment.common.PhysicalEnvironment;
 import inet.environment.common.PhysicalEnvironment;
 import inet.networklayer.configurator.ipv4.Ipv4NetworkConfigurator;
 import inet.node.inet.AdhocHost;
+import inet.node.wireless.AccessPoint;
 import inet.node.aodv.AodvRouter;
 import inet.linklayer.ieee80211.mac.Ieee80211Mac;
 import inet.visualizer.common.IntegratedVisualizer;
 //module AccessPoint extends AdhocHost
-module AccessPoint extends AodvRouter
+module AccessPoint2 extends ManetRouter
 {
     
     parameters:
-        numWlanInterfaces=1;
+        numWlanInterfaces=default(1);
     	wlan[*].mgmt.typename = default("Ieee80211MgmtAp");
-    	numApps=1;
+    	numApps=default(1);
+    	hasUdp=default(true);
+    	app[*].typename = default("UdpBasicApp2");
+    	app[*].localPort = default(1000);
+		app[*].destPort = default(1000);
+		app[*].messageLength = default(1000B);
+		app[*].sendInterval = default(1s);
+ 	
+}
+
+
+module AccessPoint3 extends WirelessHost
+{
+        parameters:
+        @networkNode();
+        @labels(node,ethernet-node,wireless-node);
+        @display("i=device/accesspoint");
+        numApps=1;
     	hasUdp=true;
     	app[*].typename = "UdpBasicApp2";
     	app[*].localPort = 1000;
 		app[*].destPort = 1000;
 		app[*].messageLength = 1000B;
 		app[*].sendInterval = 1s;
+        numWlanInterfaces = default(1);               // the number of radios in the access point
+        hasStatus = default(false);
+        fcsMode @enum("declared","computed") = default("declared");
+        wlan[*].protocol = default("ethernetmac");
+        wlan[*].mgmt.typename = default("Ieee80211MgmtAp");
+        
+        wlan[*].llc.typename = default("Ieee80211Portal");
+        wlan[*].agent.typename = default("");
+        wlan[*].radio.antenna.mobilityModule = default("^.^.^.mobility");
+        eth[*].encap.typename = "";
+        *.macTableModule = default(absPath(".macTable"));
+        *.interfaceTableModule = default(absPath(".interfaceTable"));
+        bridging.hasStp = false;
+        *.fcsMode = this.fcsMode;
+        ethernet.registerProtocol = default(true);
+    gates:
+         radioIn[numWlanInterfaces] @directIn;
+         ethg[] @labels(EtherFrame-conn);
+    submodules:
+       
+        macTable: <default("MacForwardingTable")> like IMacForwardingTable {
+            @display("p=100,300;is=s");
+        }
+
+      
+    
  	
 }
 
@@ -46,6 +106,7 @@ wlan[*].mgmt.typename = default("Ieee80211MgmtSta");
 
 
 }
+
 
 network SimNetwork
 {
@@ -66,8 +127,8 @@ network SimNetwork
         }
       
        
-    AP[1] :AccessPoint {@display("i=device/accesspoint;is=s");}
-    STA[20] :WirelessHost2 {}
+    AP[26] :AccessPoint2 {@display("i=device/accesspoint;is=s");}
+    STA[200] :WirelessHost2 {}
 
 
 }

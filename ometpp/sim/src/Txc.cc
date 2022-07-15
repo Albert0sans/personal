@@ -135,25 +135,34 @@ UdpBasicApp2::~ UdpBasicApp2(){
 
 void UdpBasicApp2::sendPacket()
 {
-    std::ostringstream str;
-    str << packetName << "-foohjhkjbar-" << numSent;
-    Packet *packet = new Packet(str.str().c_str());
-    if (dontFragment)
-        packet->addTag<FragmentationReq>()->setDontFragment(true);
-    const auto& payload = makeShared<ApplicationPacket>();
-    payload->setChunkLength(B(par("messageLength")));
-    payload->setSequenceNumber(numSent);
-    payload->addTag<CreationTimeTag>()->setCreationTime(simTime());
-    packet->insertAtBack(payload);
-    L3Address destAddr = chooseDestAddr();
-    emit(packetSentSignal, packet);
-    socket.sendTo(packet, destAddr, destPort);
-    //cout<<"numSent()"<<numSent<<" "<<simTime()<<endl;
-    numSent++;
+
+    //randomly decides wether or not to send msq
+    //srand( (unsigned)time( NULL ) );
+    float r = ((double) rand() / (RAND_MAX)) ;
+
+    if(r<0.2)
+    {
+        std::ostringstream str;
+        str << packetName << "-foohjhkjbar-" << numSent;
+        Packet *packet = new Packet(str.str().c_str());
+        if (dontFragment)
+            packet->addTag<FragmentationReq>()->setDontFragment(true);
+        const auto& payload = makeShared<ApplicationPacket>();
+        payload->setChunkLength(B(par("messageLength")));
+        payload->setSequenceNumber(numSent);
+        payload->addTag<CreationTimeTag>()->setCreationTime(simTime());
+        packet->insertAtBack(payload);
+        L3Address destAddr = chooseDestAddr();
+        emit(packetSentSignal, packet);
+        socket.sendTo(packet, destAddr, destPort);
+        //cout<<"numSent()"<<numSent<<" "<<simTime()<<endl;
+        numSent++;
+    }
 }
 
 void UdpBasicApp2::socketDataArrived(UdpSocket *socket, Packet *packet)
 {
+
 
 
 
@@ -171,7 +180,7 @@ void UdpBasicApp2::socketDataArrived(UdpSocket *socket, Packet *packet)
          auto i=std::find(hist_snr.begin(), (hist_snr.end()),snir_log);
          const bool found = (i != hist_snr.end()) ;
          auto idx = i - hist_snr.begin();
-        // cout<<"recv "<<snir_log<<"   "<<this_time<<endl;
+       //  cout<<"recv "<<snir_log<<"   "<<this_time<<endl;
          this_time=simTime();
 
 

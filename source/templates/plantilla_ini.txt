@@ -1,18 +1,33 @@
 [Config General]
 network = SimNetwork
 sim-time-limit = {{simtime}}s 
-**.radio.packetErrorRate.result-recording-modes = +vector
-**.radio.bitErrorRate.result-recording-modes = +vector
+#**.radio.packetErrorRate.result-recording-modes = +vector
+#**.radio.bitErrorRate.result-recording-modes = +vector
 
-# application parameters
+# Routing settings
+*.*.ipv4.arp.typename = "GlobalArp"
+*.*.ipv4.routingTable.netmaskRoutes = ""
+
+#SSID settings
+
+{% for nodeID, attrs in nodes.items() -%}
+{%     if attrs['type'] == "AP" -%}
+*.AP[{{ nodeID}}].wlan[*].mgmt.ssid = "AP_{{nodeID}}"
+{# Just a comment #}
+ {%- endif %}
+{%- endfor %}
+
+# application parameters and ssid in sta
 
 
 *.STA[*].numApps = 1
-*.STA[*].app[*].typename = "UdpBasicApp"
+*.STA[*].app[*].typename = "UdpBasicApp2"
 {% for nodeID, attrs in nodes.items() -%}
 {%     if attrs['type'] == "STA" -%}
 {% if (nodeID-num_ap)< num_sta -%}
+*.STA[{{ nodeID-num_ap }}].wlan[*].agent.defaultSsid = "AP_{{attrs['attachedAP'] }}"
 *.STA[{{ nodeID-num_ap }}].app[0].destAddresses=" AP[{{ attrs['attachedAP'] }}] "
+
 {# Just a comment #}
  {%- endif %}
 {%-     endif -%}
@@ -65,5 +80,6 @@ sim-time-limit = {{simtime}}s
 **.wlan*.mac.*.rateSelection.dataFrameBitrate = 54Mbps
 
 **.wlan[*].radio.receiver.sensitivity =  -101dBm
+*.radioMedium.mediumLimitCache.minReceptionPower = -101dBm
 **.wlan[*].radio.receiver.snirThreshold = 10 dB
 
