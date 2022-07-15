@@ -22,15 +22,25 @@ import inet.environment.common.PhysicalEnvironment;
 import inet.networklayer.configurator.ipv4.Ipv4NetworkConfigurator;
 import inet.node.inet.AdhocHost;
 import inet.node.aodv.AodvRouter;
+import inet.node.wireless.AccessPoint;
 import inet.linklayer.ieee80211.mac.Ieee80211Mac;
 import inet.visualizer.common.IntegratedVisualizer;
 //module AccessPoint extends AdhocHost
-module AccessPoint extends AodvRouter
+package inet.linklayer.ieee80211.mgmt;
+
+//simple  Ieee80211AgentSta2 extends Ieee80211AgentSta
+//{
+//    string defaultSsid = default("SSID");
+//    
+//}
+module AccessPoint2 extends ManetRouter
 {
     
     parameters:
         numWlanInterfaces=1;
     	wlan[*].mgmt.typename = default("Ieee80211MgmtAp");
+    	wlan[*].mgmt.ssid = "area1";
+    	
     	numApps=1;
     	hasUdp=true;
     	app[*].typename = "UdpBasicApp2";
@@ -67,7 +77,7 @@ network SimNetwork
       
        
     AP[1] :AccessPoint {@display("i=device/accesspoint;is=s");}
-    STA[20] :WirelessHost2 {}
+    STA[20] :WirelessHost {}
 
 
 }
