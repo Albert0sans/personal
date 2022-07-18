@@ -127,8 +127,9 @@ network SimNetwork
         }
       
        
-    AP[26] :AccessPoint2 {@display("i=device/accesspoint;is=s");}
+  
     STA[200] :WirelessHost2 {}
+    AP[26] :AccessPoint2 {@display("i=device/accesspoint;is=s");}
 
 
 }

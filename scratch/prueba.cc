@@ -14,6 +14,20 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+
+#include "ns3/netanim-module.h"
+#include "ns3/log.h"
+#include "ns3/command-line.h"
+#include "ns3/config-store.h"
+#include "ns3/config.h"
+#include "ns3/boolean.h"
+#include "ns3/uinteger.h"
+#include "ns3/string.h"
+#include "ns3/ssid.h"
+#include "ns3/yans-wifi-phy.h"
+#include "ns3/yans-wifi-helper.h"
+#include "ns3/wifi-net-device.h"
+#include "ns3/netanim-module.h"
 #include <algorithm>
 #include "ns3/simulator.h"
 #include <tuple>
@@ -53,7 +67,7 @@
 #include "ns3/wifi-mac-header.h"
 #include "ns3/flow-monitor-helper.h"
 #include "ns3/ipv4-flow-classifier.h"
-
+#include <math.h>   
 #include <fstream>
 
 #include "ns3/gnuplot.h"
@@ -96,7 +110,8 @@ struct histogram
  Gnuplot2dDataset dataset_num;
 
 uint32_t RecvPkts=0,TotalPkts=0;
- uint32_t simuTime =36000; //segundos
+ double simuTime; //segundos
+ int starttime =1;
  auto t_ini = high_resolution_clock::now();
 
 void Create2DPlotFile ( Gnuplot2dDataset dataset,std::string name="SNR",bool h=0,std::string folder = "resultados/plots/")
@@ -154,11 +169,11 @@ void Create2DPlotFile ( Gnuplot2dDataset dataset,std::string name="SNR",bool h=0
   plotFile.close ();
   char rm_cmd[40];
   sprintf(rm_cmd,"rm %s*.plt",folder.c_str());
-  system(rm_cmd);
+//  system(rm_cmd);
 
 }
 
-static const uint32_t packetSize = 1420;
+static const uint32_t packetSize = 1000;
 
 vector<float> snr;
 static int received_pks=1;
@@ -166,64 +181,79 @@ void PhyCallback (std::string path, Ptr<const Packet> packet)
 {
    
      
-    static int rcv=0,snr_meas=0;
-    static auto this_time=Simulator::Now(). GetSeconds() ;
+    // static double rcv=0,snr_meas=0;
+    // static auto this_time=Simulator::Now(). GetSeconds() ;
 
-    static int last_time;
-    histogram h;
-    int t=10; // frequency divisor
-
-    this_time=Simulator::Now(). GetSeconds() ;
+    // static auto last_time=Simulator::Now(). GetSeconds();
+    // histogram h;
+    // static double t=0.100; // frequency divisor
+    // static int counter=250;
+    // this_time=Simulator::Now(). GetSeconds() ;
    
-    SnrTag tag;
-    packet->PeekPacketTag(tag);
-    auto i=std::find(hist_snr.begin(), (hist_snr.end()), tag.Get());
-    const bool found = (i != hist_snr.end()) ;
-    auto idx = i - hist_snr.begin();
+    // SnrTag tag;
+    // packet->PeekPacketTag(tag);
 
-    if(!(found))
-    {
-        h.x=tag.Get();
-        h.times=1;
-        hist_snr.push_back(h);
+    // auto i=std::find(hist_snr.begin(), (hist_snr.end()), 10*log10(tag.Get()));
+    // const bool found = (i != hist_snr.end()) ;
+    // auto idx = i - hist_snr.begin();
         
-    }
-    else{
-hist_snr[idx].times+=1;
+
+    // cout<<"snr recv = "<<this_time<<" snr "<<10*log10(tag.Get())<<endl;
+    //       //  cout<<"snr recv = "<<tag.Get()<<" at "<<this_time<<endl;   
+    //         if(!(found))
+    //         {
+    //             h.x=10*log10(tag.Get());
+                
+    //             h.times=1;
+    //             hist_snr.push_back(h);
+                
+    //         }
+    //         else{
+    //             hist_snr[idx].times+=1;
 
 
-    }
-         // count received pkts each second //
-        snr_meas+=tag.Get();
+    //           }
 
-        if(last_time!=int(this_time*t)){
-        // estimated end time
+    //              // count received pkts each second //
+    //             snr_meas+=tag.Get();
+         
+    //             if(this_time>(last_time+t)){
+                
+    //                   // estimated end time
+    //                  // if(counter==0)
+    //                  // {
+    //                   auto t2 = high_resolution_clock::now();
+    //                   auto tiempo = duration_cast<milliseconds>(t2-t_ini);
+    //                   int total=0;
 
-        auto t2 = high_resolution_clock::now();
-        auto tiempo = duration_cast<milliseconds>(t2-t_ini);
-        int total=0;
+    //                   total= (tiempo.count()/1000)/this_time*simuTime-tiempo.count()/1000;
+    //                   int days,seconds, hours, minutes;
 
-        total= (tiempo.count()/1000)/this_time*simuTime;
-        int days,seconds, hours, minutes;
+    //                   minutes = total / 60;
+    //                   seconds = total % 60;
+    //                   hours = (minutes / 60);
+    //                   days= hours /24;
+    //                   hours = (minutes / 60) % 24;
+    //                   minutes = minutes % 60;
+    //                   cout << "Estimated Remaining Time =  " <<days <<" d " <<hours << " h " << minutes << " m " << seconds << " s.\n" ;
+    //                   cout << "Elapsed time = "<< tiempo.count()/1000<<" (s) "<<"Sim Time = "<<this_time<<" (s) "<<endl<<"Progress: "<<this_time/simuTime*100 <<" %"<<endl<<endl;
+    //                   counter=25;
+    //                  // }
+    //                   dataset_num.Add(this_time,rcv);
+                      
+    //                   dataset_snr.Add(this_time,10*log10(snr_meas)/(this_time-last_time));
+    //                   snr_meas=0;
+    //                   counter-=1;
+                    
+    //                   last_time=this_time;
 
-        minutes = total / 60;
-        seconds = total % 60;
-        hours = (minutes / 60);
-        days= hours /24;
-        hours = (minutes / 60) % 24;
-        minutes = minutes % 60;
-        cout << "Estimated Simulation Time =  " <<days <<" d " <<hours << " h " << minutes << " m " << seconds << " s.\n" ;
-        dataset_num.Add(this_time,rcv);
-        dataset_snr.Add(this_time,snr_meas/this_time);
-        rcv=0;
+    //         }
+    //       //  
+    //         RecvPkts+=1;
+    //         received_pks+=1;
+            
 
-    }
-  //  
-    RecvPkts+=1;
-    received_pks+=1;
-    rcv+=1;
-
-    last_time=int(this_time*t);
+   
 }
 
  
@@ -243,11 +273,84 @@ void GetDropPer( )
   TotalPkts=0;
 }
 
-
 void
-Recv_Trace(std::string context,Ptr<const Packet> p)
+Recv_Trace(Ptr<const Packet> packet, const Address & addr)
 {
-RecvPkts+=1;
+  
+
+   
+    static double rcv=0,snr_meas=0;
+    static auto this_time=Simulator::Now(). GetSeconds() ;
+
+    static auto last_time=Simulator::Now(). GetSeconds();
+    histogram h;
+    static double t=0; // frequency divisor
+    static int verbose=0,counter=1000;
+    this_time=Simulator::Now(). GetSeconds() ;
+   
+    SnrTag tag;
+    packet->PeekPacketTag(tag);
+
+    auto i=std::find(hist_snr.begin(), (hist_snr.end()), 10*log10(tag.Get()));
+    const bool found = (i != hist_snr.end()) ;
+    auto idx = i - hist_snr.begin();
+        
+
+    //cout<<"snr recv = "<<this_time<<" snr "<<10*log10(tag.Get())<<endl;
+          //  cout<<"snr recv = "<<tag.Get()<<" at "<<this_time<<endl;   
+            if(!(found))
+            {
+                h.x=10*log10(tag.Get());
+                
+                h.times=1;
+                hist_snr.push_back(h);
+                
+            }
+            else{
+                hist_snr[idx].times+=1;
+
+
+              }
+
+                 // count received pkts each second //
+                snr_meas+=tag.Get();
+         
+               // if(this_time>(last_time+t)){
+                
+                      // estimated end time
+                     // 
+                     // {
+                      auto t2 = high_resolution_clock::now();
+                      auto tiempo = duration_cast<milliseconds>(t2-t_ini);
+                      int total=0;
+
+                      if(verbose && counter==0){
+
+                          total= (tiempo.count()/1000)/this_time*simuTime-tiempo.count()/1000;
+                          int days,seconds, hours, minutes;
+
+                          minutes = total / 60;
+                          seconds = total % 60;
+                          hours = (minutes / 60);
+                          days= hours /24;
+                          hours = (minutes / 60) % 24;
+                          minutes = minutes % 60;
+                          cout << "Estimated Remaining Time =  " <<days <<" d " <<hours << " h " << minutes << " m " << seconds << " s.\n" ;
+                          cout << "Elapsed time = "<< tiempo.count()/1000<<" (s) "<<"Sim Time = "<<this_time<<" (s) "<<endl<<"Progress: "<<this_time/simuTime*100 <<" %"<<endl<<endl;
+                          counter=1000;
+                      }
+                      dataset_num.Add(this_time,rcv);
+                     // snr_meas=snr_meas/(this_time-last_time);
+                      dataset_snr.Add(this_time,10*log10(snr_meas));
+                      snr_meas=0;
+                      counter-=1;
+                    
+                      last_time=this_time;
+
+           // }
+          //  
+            RecvPkts+=1;
+            received_pks+=1;
 }
 
 void
@@ -258,7 +361,7 @@ TotalPkts+=1;
 
 MobilityHelper SetMobility(const char* file)
 {
-
+    
     MobilityHelper mobility;
     Ptr<ListPositionAllocator> lp =CreateObject<ListPositionAllocator>();
 
@@ -275,6 +378,7 @@ MobilityHelper SetMobility(const char* file)
            lp->Add(Vector (x,y,z));
 
       }
+      
      fclose(newfile);
    
   //node1
@@ -290,10 +394,13 @@ YansWifiPhyHelper CreatePhy()
 
     YansWifiChannelHelper channel = YansWifiChannelHelper::Default ();
     YansWifiPhyHelper phy = YansWifiPhyHelper::Default ();
+ //   phy.Set ("TxPowerStart", DoubleValue(30));
+ // phy.Set ("TxPowerEnd", DoubleValue(30));
 
     //asignamos a nuestra interfaz física el canal, de esta forma todos los dispositivos que usen esta interfaz podrán comunicarse e interferirse
-
-    phy.SetChannel (channel.Create ());
+    //phy.Set ("ChannelSettings", StringValue ("{0, 0, BAND_2_4GHZ, 0}"));
+    channel.AddPropagationLoss ("ns3::FriisPropagationLossModel");
+     phy.SetChannel (channel.Create ());
 
     return phy;
 
@@ -315,19 +422,26 @@ std::tuple <NodeContainer,NetDeviceContainer >CreateSTA(vector<int> listaAPs ,Ya
    
         Ssid ssid = Ssid (ap_conn);
    
-        
+        // Ssid ssid = Ssid ("wifi-default");
         //definimos el estándar a utilizar, que por defecto es 802.11ax
 
         WifiHelper wifi;
-
+      //  wifi.SetStandard (WIFI_STANDARD_80211b);
         //instalamos wifi en los dispositivos STA, desactivando las tramas beacon, para que estos dispositivos esperen recibirlas
 
-        wifi.SetStandard(WIFI_PHY_STANDARD_80211a);
-        wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-                                "DataMode", StringValue ("OfdmRate54Mbps"));
+       
         mac.SetType ("ns3::StaWifiMac",
+   "Ssid", SsidValue (ssid),
+        "ActiveProbing", BooleanValue (false));
+        
+        wifi.SetStandard (ns3::WIFI_PHY_STANDARD_80211a);
+        wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode", StringValue("OfdmRate54Mbps"), "ControlMode", StringValue("OfdmRate54Mbps"));
+        
+        
+         mac.SetType ("ns3::StaWifiMac",
         "Ssid", SsidValue (ssid),
         "ActiveProbing", BooleanValue (false));
+        
 
         staDevices.Add (wifi.Install (phy, mac, STA.Get(i)));
         
@@ -349,16 +463,19 @@ std::tuple <NodeContainer,NetDeviceContainer > CreateAP(uint32_t n_aps,YansWifiP
     {
         sprintf(ap_conn, "AP%d", i);
         Ssid ssid = Ssid (ap_conn);
-
+        // Ssid ssid = Ssid ("wifi-default");
         //definimos el estándar a utilizar, que por defecto es 802.11ax
 
         WifiHelper wifi;
-
-        wifi.SetStandard(WIFI_PHY_STANDARD_80211a);
-        wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-                                "DataMode", StringValue ("OfdmRate54Mbps"));
+        wifi.SetStandard (ns3::WIFI_PHY_STANDARD_80211a);
+        wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager", "DataMode", StringValue("OfdmRate54Mbps"), "ControlMode", StringValue("OfdmRate54Mbps"));
+        
+     
+     //   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
+      //                          "DataMode", StringValue ("OfdmRate54Mbps"));
         mac.SetType ("ns3::ApWifiMac",
-        "Ssid", SsidValue (ssid));
+        "Ssid", SsidValue (ssid)
+        );
 
         apDevices.Add (wifi.Install (phy, mac, AP.Get(i)));
      
@@ -375,9 +492,19 @@ ns3::RngSeedManager::SetSeed(2);
 
 
 vector<int> listaAPs;
- 
-uint32_t n_stas=200;
-uint32_t n_aps=26;
+uint32_t n_stas=2;
+uint32_t n_aps=2;
+simuTime=5;
+        if( argc>1) 
+                n_stas=atoi(argv[1]);
+        if (argc>2)        
+                n_aps=atoi(argv[2]);
+        if (argc>3)
+                simuTime=0.1+atoi(argv[3]);
+                        
+                
+cout<<"Running Simulation with "<<n_stas<<" STAS, and "<<n_aps<<" APS"<<endl;                
+float interPacketInterval =0.1;
 
 ///
 
@@ -398,25 +525,27 @@ uint32_t n_aps=26;
 
      while((fscanf (newfile, "%d\n", &x))!=EOF)
      {
-      
+
             if(i>=n_stas)
               break;
             listaAPs.push_back(x);
               i++;
       }
 
-
-
-YansWifiPhyHelper phy = CreatePhy();
-
+ Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold", StringValue ("0"));
+ 
 NodeContainer STA;
 NetDeviceContainer staDevices;
 NodeContainer AP;
 NetDeviceContainer apDevices;
 
+YansWifiPhyHelper phy = CreatePhy();
+phy.EnablePcap ("rtscts-pcap-node"  , STA);
+phy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
+
+
 std::tie(STA,staDevices) = CreateSTA(listaAPs,phy);
 std::tie(AP,apDevices) = CreateAP(n_aps,phy);
-
 GetDropPer();
 // definir posiciones
 
@@ -442,23 +571,29 @@ address.SetBase ("10.0.0.0", "255.0.0.0");
 
 
 
+
+
 Ipv4InterfaceContainer staNodeInterface;
 Ipv4InterfaceContainer apNodeInterface;
 
 staNodeInterface = address.Assign (staDevices);
 apNodeInterface = address.Assign (apDevices);
+
 //INSTALAMOS APLICACION DE TRAFICO en APS
 
 
 uint32_t nNodes;
+
 /// SINK application in APs
 ApplicationContainer apps_sink;
  nNodes = apDevices.GetN ();
+ cout<<"AP"<<nNodes<<endl;
 for (uint32_t i = 0; i < nNodes; ++i)
 
    {
-    PacketSinkHelper sink ("ns3::TcpSocketFactory", InetSocketAddress (Ipv4Address::GetAny (), 9));
+   PacketSinkHelper sink ("ns3::UdpSocketFactory", InetSocketAddress ( apNodeInterface.GetAddress (i), 9));
     apps_sink.Add (sink.Install (AP.Get (i)));
+    
     
 
    }   
@@ -467,40 +602,48 @@ for (uint32_t i = 0; i < nNodes; ++i)
  
 // source application in all stas
 
-ApplicationContainer apps_source;
+    ApplicationContainer apps_source;
  nNodes = staDevices.GetN ();
-  
-for (uint32_t i = 0; i < nNodes; ++i)
+ for (uint32_t i = 0; i < nNodes; ++i)
 
-   {
-   
-     BulkSendHelper source  ("ns3::TcpSocketFactory", InetSocketAddress (apNodeInterface.GetAddress (listaAPs[i]), 9));
-     source.SetAttribute ("MaxBytes", UintegerValue (0));
-     apps_source.Add(source.Install (STA.Get (i)));
+    {
 
+    cout<<staNodeInterface.GetAddress (i)<<" Envia a "<< apNodeInterface.GetAddress (listaAPs[i])<<endl; 
+      UdpClientHelper source ( InetSocketAddress (apNodeInterface.GetAddress (listaAPs[i]), 9));
+      source.SetAttribute ("Interval", TimeValue (Seconds(interPacketInterval)));
+      source.SetAttribute ("PacketSize", UintegerValue (1000));
+    source.SetAttribute ("MaxPackets", UintegerValue (simuTime/interPacketInterval+1));
+     // BulkSendHelper source  ("ns3::TcpSocketFactory", InetSocketAddress (apNodeInterface.GetAddress (listaAPs[i]), 9));
+   //   source.SetAttribute ("MaxBytes", UintegerValue (1000));
+      apps_source.Add(source.Install (STA.Get (i)));
+     
 
-   }   
+    }   
+
+     apps_source.Start (Seconds (starttime));
+ apps_source.Stop (Seconds (simuTime));
 cout<<"Simulation Running"<<endl;
-    apps_sink.Start (Seconds (0));
-    apps_sink.Stop (Seconds (simuTime*0.9));
-    apps_source.Start (Seconds (0.5));
-    apps_source.Stop (Seconds (simuTime*0.8));
 
+    apps_sink.Start (Seconds (0));
+    //apps_sink.Stop (Seconds (simuTime));
    
+
+   Simulator::Stop (Seconds (simuTime));
 
 
 
 phy.EnablePcap ("resultados/capturas/STA", staDevices.Get (0));
+//phy.EnablePcap ("resultados/capturas/AP", apDevices.Get (0));
 
 Config::Connect("/NodeList/*/DeviceList/*/Mac/MacTx",
 MakeCallback(&Send_Trace));
-Config::Connect ("/NodeList/*/$ns3::PointToPointNetDevice/Mac/MacRx",
+Config::ConnectWithoutContext ("/NodeList/*/ApplicationList/*/$ns3::PacketSink/Rx",
 MakeCallback (&Recv_Trace));
 
  Config::Connect ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/PhyRxEnd",
                    MakeCallback (&PhyCallback));
 
-Simulator::Stop (Seconds (simuTime));
+//Simulator::Stop (Seconds (simuTime));
 
 
 
@@ -511,6 +654,7 @@ FlowMonitorHelper flowmon;
   Ptr<FlowMonitor> monitor = flowmon.InstallAll ();
 
   Simulator::Stop (Seconds (simuTime));
+   AnimationInterface anim ("animation.xml");
   Simulator::Run ();
 
 
@@ -565,6 +709,7 @@ Create2DPlotFile(dataset_hist,"SNR_Histogram", 1);
 Create2DPlotFile(dataset_num,"Total-Number-of-Packets");
 
  Simulator::Stop (Seconds (simuTime));
+
   Simulator::Run ();
 Simulator::Destroy ();
 
